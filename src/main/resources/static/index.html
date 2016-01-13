@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Hello WebSocket</title>
+<link rel="stylesheet" href="style.css" type="text/css" />
+<link
+	href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css"
+	rel="stylesheet">
+<link
+	href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"
+	type="text/css" rel="stylesheet">
+
+<script src="sockjs-0.3.4.js"></script>
+<script src="stomp.js"></script>
+<script type="text/javascript">
+        var stompClient = null;
+        var myMgsTmpPrt1 = '<div class="row"><div class="col-xs-1"><a href=""><img title="';
+        var myMgsTmpPrt2 = '" src="default-user-icon.png" class="img-thumbnail img-responsive img-circle pull-right" style="width:70px;"></a></div> ';        
+        var myMgsTmpPrt3 = '<div class="col-xs-5"><div class="panel panel-default"><div class="panel-body ng-binding">';
+        var myMgsTmpPrt4 = '<br><span class="label label-info ng-binding">';
+        var myMgsTmpPrt5 = '</span></div></div></div></div>';
+        
+        var othersMgsTmpPrt1 = '<div class="row"><div class="col-xs-2 col-xs-push-5"><a href=""><img title="';
+        var othersMgsTmpPrt2 = '" src="default-user-icon.png" class="img-thumbnail img-responsive img-circle pull-left" style="width:70px;"></a></div>';        
+        var othersMgsTmpPrt3 = '<div class="col-xs-5 col-xs-pull-2"><div class="panel panel-default"><div class="panel-body ng-binding"> ';
+        var othersMgsTmpPrt4 = '<br><span class="label label-info ng-binding">';
+        var othersMgsTmpPrt5 = '</span></div></div></div></div>';
+
+        function setConnected(connected) {
+            document.getElementById('connect').disabled = connected;
+            document.getElementById('disconnect').disabled = !connected;
+            document.getElementById('conversationDiv').style.visibility = connected ? 'visible' : 'hidden';
+            document.getElementById('response').innerHTML = '';
+        }
+
+        connect();
+        
+        function connect() {
+            var socket = new SockJS('/chat');
+            stompClient = Stomp.over(socket);
+            stompClient.connect({}, function(frame) {
+                setConnected(true);
+                console.log('Connected: ' + frame);
+                stompClient.subscribe('/user/queue/messages', function(greeting){
+                	showMessage(greeting.body);
+                });
+            });
+        }
+
+        function disconnect() {
+            if (stompClient != null) {
+                stompClient.disconnect();
+            }
+            setConnected(false);
+            console.log("Disconnected");
+        }
+                
+        function sendName() {
+            var recipient = document.getElementById('recipient').value;
+            var message = "New Chat Request";//document.getElementById('message').value;
+            var date = new Date();
+            var time = date.toISOString();
+            
+            stompClient.send("/app/chat", {}, JSON.stringify({ 'sender': '', 'recipient': recipient, 'message': message, 'time': time }));
+            document.getElementById('conversationDiv').style.visibility = 'hidden';
+        }
+        
+        function send(ele) {
+            if(event.keyCode == 13) {
+            	sendMessage();     
+            }
+        }
+        
+        function sendMessage() {
+            var recipient = document.getElementById('recipient').value;
+            var message = document.getElementById('message').value;
+            var date = new Date();
+            var time = date.toISOString();
+            
+            stompClient.send("/app/chat", {}, JSON.stringify({ 'sender': '', 'recipient': recipient, 'message': message, 'time': time }));
+        }
+
+        function showGreeting(message) {
+        	var jsonResponse = JSON.parse(message);
+        	var finalResult = jsonResponse.sender+": "+jsonResponse.message+"                           ["+new Date(jsonResponse.time)+"]";
+        	if(jsonResponse.message == " has joined in this chat.") {
+        		finalResult = jsonResponse.sender + jsonResponse.message+"                           ["+new Date(jsonResponse.time)+"]";
+        	}
+        	        	
+            var response = document.getElementById('response');
+            var p = document.createElement('p');
+            p.style.wordWrap = 'break-word';
+            p.appendChild(document.createTextNode(finalResult));
+            response.appendChild(p);
+        }
+        
+        function showMessage(message) {
+        	var jsonResponse = JSON.parse(message);
+        	       	        	
+            var response = document.getElementById('response');
+            
+            if(jsonResponse.message !== "New Chat Request") {
+            	var eachMgsDiv = document.createElement('div');
+                
+                eachMgsDiv.setAttribute('class','col-sm-12 ng-scope');
+
+                var recipient = document.getElementById('recipient').value;
+                
+                if(jsonResponse.recipient === recipient) {
+                	eachMgsDiv.innerHTML = myMgsTmpPrt1 + jsonResponse.sender + myMgsTmpPrt2  + myMgsTmpPrt3 + jsonResponse.message + myMgsTmpPrt4 + new Date(jsonResponse.time) + myMgsTmpPrt5;
+                }
+                else {
+                	eachMgsDiv.innerHTML = othersMgsTmpPrt1 + jsonResponse.sender + othersMgsTmpPrt2 + othersMgsTmpPrt3 + jsonResponse.message + othersMgsTmpPrt4 + new Date(jsonResponse.time) + othersMgsTmpPrt5;
+                }
+                
+                response.appendChild(eachMgsDiv);
+            }
+            
+            
+        }
+    </script>
+</head>
+<body onload="disconnect()">
+
+	<div>
+		<button id="connect" onclick="connect();">Connect</button>
+		<button id="disconnect" disabled="disabled" onclick="disconnect();">Disconnect</button>
+
+		<select id="recipient" onchange="sendName();">
+			<option value="">Select User</option>
+			<option value="ian">ian</option>
+			<option value="chris">chris</option>
+			<option value="dan">dan</option>
+		</select>
+
+	</div>
+	<div id="conversationDiv"></div>
+	<div id="composeDiv">
+
+		<p id="response"></p>
+		<input type="text" id="message" class="composeInput"
+			onkeydown="send(this)" />
+		<button id="sendName" onclick="sendMessage();">Send</button>
+	</div>
+	
+</body>
+</html>

@@ -1,0 +1,57 @@
+.body {
+  background-color: #eee;
+  color:#444;
+}
+
+.composeInput {
+	font-family: 'Trebuchet MS', 'Malgun Gothic';
+	width: 40%;
+	height: 28px;
+	line-height: 28px;
+	border: medium none;
+	border-color: #E5E5E5 #DBDBDB #D2D2D2;
+	border-style: solid;
+	border-width: 1px;
+}
+
+html, body, .container
+{
+    height: 100%; 
+    min-height: 100%;
+}
+
+.first {
+    float: left;
+    width: 20%;
+    height: 30%;
+    background-color: #eee;
+}
+
+.second{
+    float: left;
+    width: 20%;
+    height: 70%;
+    background-color: #eee;
+}
+
+
+.third{
+    float: right;
+    width: 80%;
+    height: 80%;
+    background-color: #eee;
+}
+
+.fourth {
+    float: right;
+    width: 40%;
+    height: 20%;
+    background-color: #eee;
+}
+
+.last{
+    float: right;
+    width: 40%;
+    height: 20%;
+    background-color: #eee;
+}
